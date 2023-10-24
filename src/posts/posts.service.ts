@@ -1,17 +1,15 @@
-import { BadRequestException, HttpCode, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import Axios from "axios";
 import { errors } from 'src/utils/errors';
 import { Strings } from 'src/utils/Strings';
 
+
 @Injectable()
 export class PostsService {
 
-async getPosts(session:Record<string,any>){
+async getPosts(){
     try{
-
-        console.log(session);
     
-    if(session.api_key!==process.env.API_KEY) throw new Error().name=errors.unAuthorized;   
 
     let stories= await Axios.get("https://api.nytimes.com/svc/topstories/v2/home.json?api-key="+process.env.API_KEY);
     return{

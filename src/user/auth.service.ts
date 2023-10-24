@@ -5,6 +5,7 @@ import { UserService } from "./user.service";
 import { Strings } from "src/utils/strings";
 import { errors } from "src/utils/errors";
 import { LoginDto } from "./dtos/login.dto";
+import { generateToken } from "src/utils/commonFunctions";
 
 @Injectable()
 
@@ -40,11 +41,11 @@ export class AuthService{
         try{
 
           let userByEmail=await this.userService.findByEmail(body.email);
-          if(userByEmail.email) throw new Error().name=errors.unAuthorized;
+          if(userByEmail && userByEmail.email) throw new Error().name=errors.unAuthorized;
           let encryptPassword= this.encryptPassword(body.password);
           body.password=encryptPassword;
           const user= await this.userService.create(body);
-          delete user.password;
+          user.password=null;
           return {
             message:[Strings.user.created_success],
             statusCode:HttpStatus.CREATED,
@@ -73,7 +74,7 @@ export class AuthService{
         }
     }
 
-    async login(body:LoginDto,session:Record<string,any>){
+    async login(body:LoginDto){
         try{
 
             let userByEmail=await this.userService.findByEmail(body.email);
@@ -81,11 +82,12 @@ export class AuthService{
             if(!body.email) throw new Error().name=errors.unAuthorized;
             else if(!this.validatePassword(userByEmail.password,body.password))throw new Error().name=errors.unAuthorized;
             else{
-                delete userByEmail.password;
-                session.api_key=process.env.API_KEY;
+                let token=generateToken({name:userByEmail.name,email:userByEmail.email});
+                userByEmail.password=null;
                 return{
                     data:{
-                     user:userByEmail
+                     user:userByEmail,
+                     token
                     },
                     message:[Strings.user.login_success],
                     statusCode:HttpStatus.OK
